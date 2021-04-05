@@ -88,8 +88,21 @@ if __name__ == '__main__':
                                     batch_size=1,
                                     shuffle=True)
     itr = enumerate(train_pairs_loader)
+
+    # set the length for training and validation set
+    total_len = len(r)
+    training_len = total_len // 4 * 3
+
+    # storage for training data and validation data
+    training_data = []
+    validation_data = []
     for idx, data in itr:
         real, fake, label = data
+        if idx < training_len:
+            # train, train, train = data
+            training_data.append(data)
+        else:
+            validation_data.append(data)
         # print(real.shape)
         # print(fake.shape)
         # print(label)
