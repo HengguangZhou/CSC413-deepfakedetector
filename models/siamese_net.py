@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.functional as F
 
+
 # adapted from https://stackoverflow.com/questions/49433936/how-to-initialize-weights-in-pytorch
 def init_conv_weights(m):
     if type(m) == nn.Conv2d:
@@ -37,7 +38,7 @@ class siamese(nn.Module):
                                   nn.ReLU()
                                   )
         self.conv.apply(init_conv_weights)
-        self.fc1 = nn.Linear(73984, 4096)
+        self.fc1 = nn.Linear(9216, 4096)
         self.fc1.apply(init_fc_weights)
         self.fc2 = nn.Linear(4096, 1)
         self.fc2.apply(init_fc_weights)
