@@ -13,7 +13,6 @@ class PairedImagesDataset(Dataset):
     """
     The custom dataset contains real and fake images that will be paired together
     """
-
     def __init__(self, data_path, transform=None):
         """
         :param data_path: Root directory of the image data
@@ -30,7 +29,7 @@ class PairedImagesDataset(Dataset):
         # self.fake_images = self.load_images(os.path.join(data_path, 'training_fake'))
         self.all_image_pairs = self.pair_images()
         # print(self.all_image_pairs)
-
+      
     def __len__(self):
         return len(self.all_image_pairs)
 
