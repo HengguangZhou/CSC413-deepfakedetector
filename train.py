@@ -46,7 +46,7 @@ if __name__ == "__main__":
     optimizer = torch.optim.Adam(model.parameters(), lr=opts.lr)
     optimizer.zero_grad()
 
-    transform = Compose([Resize(200),
+    transform = Compose([Resize(105),
                     ToTensor(),
                     ])
     # transform = None
@@ -78,6 +78,7 @@ if __name__ == "__main__":
                 # print("------------------------")
                 loss = criterion(pred, label)
                 los += loss.item()
+                optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
 
@@ -96,12 +97,12 @@ if __name__ == "__main__":
                 img1, img2, label = data
                 img1, img2, label = img1.to(device), img2.to(device), label.to(device)
                 pred = model(img1, img2)
-                batch_corr = int(torch.sum(torch.round(pred) == label))
+                batch_corr = int(torch.sum(torch.round(torch.sigmoid(pred)) == label))
 
                 t.set_postfix(accuracy='{:.2f}%'.format(batch_corr / img1.shape[0] * 100))
                 t.update(img1.shape[0])
                 val_corr += batch_corr
-            print(f"\nval accuracy: {val_corr / len(val_pairs)}")
+            print("\nval accuracy: {:.2f}%".format(val_corr / len(val_pairs)))
 
 
 
