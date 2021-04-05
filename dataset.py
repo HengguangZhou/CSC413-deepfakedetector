@@ -6,26 +6,30 @@ from PIL import Image
 import glob
 from torchvision import transforms, utils
 import random
-
+from torchvision.transforms import Compose, RandomCrop, ToTensor, ToPILImage, CenterCrop, Resize
+import matplotlib.pyplot as plt
 
 class PairedImagesDataset(Dataset):
     """
     The custom dataset contains real and fake images that will be paired together
     """
-
-    def __init__(self, data_path, transform):
+    def __init__(self, data_path, transform=None):
         """
         :param data_path: Root directory of the image data
         """
         self.data_path = data_path
-        self.transform = transform
-        self.real_images = self.load_images(os.path.join(data_path, 'training_real_toy'))
-        self.fake_images = self.load_images(os.path.join(data_path, 'training_fake_toy'))
+        if transform is None:
+            self.transform = transforms.Compose([
+        transforms.ToTensor(), ])
+        else:
+            self.transform = transform
+        self.real_images = self.load_images(os.path.join(data_path, 'training_real'))
+        self.fake_images = self.load_images(os.path.join(data_path, 'training_fake'))
         # self.real_images = self.load_images(os.path.join(data_path, 'training_real'))
         # self.fake_images = self.load_images(os.path.join(data_path, 'training_fake'))
         self.all_image_pairs = self.pair_images()
         # print(self.all_image_pairs)
-
+      
     def __len__(self):
         return len(self.all_image_pairs)
 
@@ -41,7 +45,7 @@ class PairedImagesDataset(Dataset):
         images = []
         for filename in glob.glob(os.path.join(path, '*.jpg')):
             im = Image.open(filename)
-            images.append(np.array(im))
+            images.append(im)
             # print(np.array(im).shape)
 
         return images
@@ -57,13 +61,13 @@ class PairedImagesDataset(Dataset):
         # Paired each fake image with a real image
         for i in range(len(self.fake_images)):
             choice = random.choice(self.real_images)
-            label = np.array([1, 0])
+            label = np.array([0.0])
             real_fake_pairs.append((choice, self.fake_images[i], label))
 
         # Want to pair real with real
         for i in range(len(self.real_images)):
             choice = random.choice(self.real_images)
-            label = np.array([1, 1])
+            label = np.array([1.0])
             real_real_pairs.append((choice, self.real_images[i], label))
 
         # Mix the real-fake pair and the real-real pair together
@@ -74,30 +78,16 @@ class PairedImagesDataset(Dataset):
 
 
 if __name__ == '__main__':
-    transform = transforms.Compose([
-        transforms.ToTensor(),  # Convert the numpy array to a tensor
-    ])
-    r = PairedImagesDataset('../data/real_and_fake_face/', transform)
-
-    # set the length for training and validation set
-    total_len = len(r)
-    training_len = total_len // 4 * 3
-
-    # storage for training data and validation data
-    training_data = []
-    validation_data = []
-
-
-    itr = enumerate(r)
+    transform = transforms.Compose([Resize(105),
+        transforms.ToTensor(),
+    ]) # Convert the numpy array to a tensor
+    # transform = None
+    r = PairedImagesDataset('./datasets/real_and_fake_face/', transform)
+    train_pairs_loader = DataLoader(dataset=r,
+                                    batch_size=1,
+                                    shuffle=True)
+    itr = enumerate(train_pairs_loader)
     for idx, data in itr:
         real, fake, label = data
-        if idx < training_len:
-            # train, train, train = data
-            training_data.append(data)
-        else:
-            validation_data.append(data)
-        # print(real.shape)
-        # print(fake.shape)
-        # print(label)
-    # print(len(training_data))
-    # print(len(validation_data))
+        plt.imshow(fake[0].permute(1, 2, 0))
+        plt.show()
