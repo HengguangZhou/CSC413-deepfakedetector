@@ -78,9 +78,26 @@ if __name__ == '__main__':
         transforms.ToTensor(),  # Convert the numpy array to a tensor
     ])
     r = PairedImagesDataset('../data/real_and_fake_face/', transform)
+
+    # set the length for training and validation set
+    total_len = len(r)
+    training_len = total_len // 4 * 3
+
+    # storage for training data and validation data
+    training_data = []
+    validation_data = []
+
+
     itr = enumerate(r)
     for idx, data in itr:
         real, fake, label = data
+        if idx < training_len:
+            # train, train, train = data
+            training_data.append(data)
+        else:
+            validation_data.append(data)
         # print(real.shape)
         # print(fake.shape)
         # print(label)
+    # print(len(training_data))
+    # print(len(validation_data))
