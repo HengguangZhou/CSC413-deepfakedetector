@@ -59,7 +59,7 @@ class PairedImagesDataset(Dataset):
             # Get real-fake image pair
             img1 = random.choice(self.real_images)
             img2 = random.choice(self.fake_images)
-            label = np.array([1, 0])
+            label = np.array([0.0])
         else:
             # Get real-real image pair
             idx1 = random.randint(0, len(self.real_images)-1)
@@ -72,7 +72,7 @@ class PairedImagesDataset(Dataset):
 
             img1 = self.real_images[idx1]
             img2 = self.real_images[idx2]
-            label = np.array([1, 1])
+            label = np.array([1.0])
 
         return (img1, img2, label)
 
