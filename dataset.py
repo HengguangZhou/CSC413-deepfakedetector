@@ -23,12 +23,10 @@ class PairedImagesDataset(Dataset):
         transforms.ToTensor(), ])
         else:
             self.transform = transform
-        self.real_images = self.load_images(os.path.join(data_path, 'training_real_toy'))
-        self.fake_images = self.load_images(os.path.join(data_path, 'training_fake_toy'))
+        self.real_images = self.load_images(os.path.join(data_path, 'training_real_toy'), True)
+        self.fake_images = self.load_images(os.path.join(data_path, 'training_fake_toy'), False)
         # self.real_images = self.load_images(os.path.join(data_path, 'training_real'))
         # self.fake_images = self.load_images(os.path.join(data_path, 'training_fake'))
-        # self.all_image_pairs = self.pair_images()
-        # print(self.all_image_pairs)
       
     def __len__(self):
         # return len(self.all_image_pairs)
@@ -42,11 +40,15 @@ class PairedImagesDataset(Dataset):
 
         return real_image, fake_image, label
 
-    def load_images(self, path):
+    def load_images(self, path, real):
         images = []
+        label = 0.0
+        if real:
+            label = 1.0
+
         for filename in glob.glob(os.path.join(path, '*.jpg')):
             im = Image.open(filename)
-            images.append(im)
+            images.append((im, np.array([label])))
             # print(np.array(im).shape)
 
         return images
@@ -54,26 +56,14 @@ class PairedImagesDataset(Dataset):
     def get_image_pair(self, index):
         random.shuffle(self.real_images)
         random.shuffle(self.fake_images)
-        if index % 2 == 0:
-            # Get real-fake image pair
-            img1 = random.choice(self.real_images)
-            img2 = random.choice(self.fake_images)
-            label = np.array([0.0])
-        else:
-            # Get real-real image pair
-            idx1 = random.randint(0, len(self.real_images)-1)
-            idx2 = random.randint(0, len(self.real_images)-1)
+        pooled_images = self.real_images+self.fake_images
+        random.shuffle(pooled_images)
 
-            # Avoid same image pair
-            while idx1 == idx2:
-                idx1 = random.randint(0, len(self.real_images)-1)
-                idx2 = random.randint(0, len(self.real_images)-1)
+        img1 = random.choice(self.real_images)
+        img2 = random.choice(pooled_images)
+        label = img2[1]
 
-            img1 = self.real_images[idx1]
-            img2 = self.real_images[idx2]
-            label = np.array([1.0])
-
-        return (img1, img2, label)
+        return img1[0], img2[0], label
 
 
 if __name__ == '__main__':
@@ -82,7 +72,7 @@ if __name__ == '__main__':
     ]) # Convert the numpy array to a tensor
     # transform = None
     r = PairedImagesDataset('../data/real_and_fake_face/', transform)
-    # print(len(r))
+    print(len(r))
     train_pairs_loader = DataLoader(dataset=r,
                                     batch_size=1,
                                     shuffle=True)
