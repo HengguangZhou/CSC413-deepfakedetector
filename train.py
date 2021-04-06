@@ -3,12 +3,14 @@ import os
 import torch
 import numpy as np
 from models.siamese_net import siamese
+from models.cnn_pairwise import CnnPairwise
 from tqdm import tqdm
 from dataset import PairedImagesDataset
 from torch.utils.data import random_split
 from torch.utils.data.dataloader import DataLoader
 from torch import nn
 from torchvision.transforms import Compose, RandomCrop, ToTensor, ToPILImage, CenterCrop, Resize
+from loss import ContrastiveLoss
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -36,12 +38,15 @@ if __name__ == "__main__":
 
     if opts.model == 'siamese':
         model = siamese(opts.input_channels)
+    elif opts.model == 'cnn_pairwise':
+        model = CnnPairwise(opts.input_channels)
     else:
         model = siamese(opts.input_channels)
 
     model = model.to(device)
 
-    criterion = torch.nn.BCEWithLogitsLoss()
+    # criterion = torch.nn.BCEWithLogitsLoss()
+    criterion = ContrastiveLoss()
     val = torch.nn
     optimizer = torch.optim.Adam(model.parameters(), lr=opts.lr)
     optimizer.zero_grad()
@@ -72,11 +77,11 @@ if __name__ == "__main__":
             for idx, data in enumerate(train_pairs_loader):
                 img1, img2, label = data
                 img1, img2, label = img1.to(device), img2.to(device), label.to(device)
-                pred = model(img1, img2)
+                i1, i2, pred = model(img1, img2)
                 # print(pred)
                 # print(label)
                 # print("------------------------")
-                loss = criterion(pred, label)
+                loss = criterion(i1, i2, label)
                 los += loss.item()
                 optimizer.zero_grad()
                 loss.backward()
@@ -96,7 +101,7 @@ if __name__ == "__main__":
             for idx, data in enumerate(val_pairs_loader):
                 img1, img2, label = data
                 img1, img2, label = img1.to(device), img2.to(device), label.to(device)
-                pred = model(img1, img2)
+                i1, i2, pred = model(img1, img2)
                 batch_corr = int(torch.sum(torch.round(torch.sigmoid(pred)) == label))
 
                 t.set_postfix(accuracy='{:.2f}%'.format(batch_corr / img1.shape[0] * 100))

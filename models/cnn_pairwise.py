@@ -34,12 +34,12 @@ class CnnPairwise(nn.Module):
         self.db3.apply(init_conv_weights)
 
         self.conv2 = nn.Sequential(nn.Conv2d(256, 2, kernel_size=3),
-                                   nn.AvgPool2d(3))
+                        nn.AvgPool2d(11))
         self.conv2.apply(init_conv_weights)
 
-        self.fc1 = nn.Sequential(nn.Linear(9216, 128), nn.Softmax())  # Don't know the size for input channels...
+        self.fc1 = nn.Sequential(nn.Linear(256*13*13, 128), nn.Sigmoid())  # Don't know the size for input channels...
         self.fc1.apply(init_fc_weights)
-        self.fc2 = nn.Sequential(nn.Linear(2, 2), nn.Softmax())
+        self.fc2 = nn.Sequential(nn.Linear(2, 1), nn.Sigmoid())
         self.fc2.apply(init_fc_weights)
 
     def dense_block(self, in_channel, out_channel, kernel_size):
@@ -51,20 +51,21 @@ class CnnPairwise(nn.Module):
                              nn.Sigmoid())
 
     def forward(self, x1, x2):
-        # First image
         x1 = self.conv(x1)
         x1 = self.db1(x1)
         x1 = self.db2(x1)
         x1 = self.db3(x1)
-        x1 = self.conv2(x1)
-        x1 = self.fc1(x1.view(x1.shape[0], -1))
+        x1_r = x1.view(x1.shape[0], -1)
+        x1_r = self.fc1(x1_r)
 
         # Second image
         x2 = self.conv(x2)
         x2 = self.db1(x2)
         x2 = self.db2(x2)
         x2 = self.db3(x2)
-        x2 = self.conv2(x2)
-        x2 = self.fc1(x2.view(x2.shape[0], -1))
+        x2_r = x2.view(x2.shape[0], -1)
 
-        return self.fc2(torch.abs(x1 - x2))
+        x2 = self.conv2(x2)
+        x2_r = self.fc1(x2_r)
+
+        return x1_r, x2_r, self.fc2(x2.view(x2.shape[0], -1))
