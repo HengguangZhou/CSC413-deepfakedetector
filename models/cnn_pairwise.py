@@ -23,38 +23,48 @@ class CnnPairwise(nn.Module):
                                             kernel_size=7,
                                             stride=4),
                                   nn.BatchNorm2d(96),
-                                  nn.ReLU(),
+                                  nn.Sigmoid(),
                                   )
         self.conv.apply(init_conv_weights)
-        self.db1 = nn.Sequential(nn.Conv2d(96, 96, 3),
-                                 nn.Sigmoid(),
-                                 nn.Conv2d(96, 128, 3),
-                                 nn.Sigmoid())
-        self.db2 = nn.Sequential(nn.Conv2d(128, 128, 3),
-                                 nn.Sigmoid(),
-                                 nn.Conv2d(128, 256, 3),
-                                 nn.Sigmoid())
-        self.db3 = nn.Sequential(nn.Conv2d(256, 256, 3),
-                                 nn.Sigmoid(),
-                                 nn.Conv2d(256, 256, 3),
-                                 nn.Sigmoid())
+        self.db1 = self.dense_block(96, 128, 3)
+        self.db1.apply(init_conv_weights)
+        self.db2 = self.dense_block(128, 256, 3)
+        self.db2.apply(init_conv_weights)
+        self.db3 = self.dense_block(256, 256, 3)
+        self.db3.apply(init_conv_weights)
+
         self.conv2 = nn.Sequential(nn.Conv2d(256, 2, kernel_size=3),
                                    nn.AvgPool2d(3))
+        self.conv2.apply(init_conv_weights)
 
         self.fc1 = nn.Sequential(nn.Linear(9216, 128), nn.Softmax())  # Don't know the size for input channels...
         self.fc1.apply(init_fc_weights)
         self.fc2 = nn.Sequential(nn.Linear(2, 2), nn.Softmax())
         self.fc2.apply(init_fc_weights)
 
+    def dense_block(self, in_channel, out_channel, kernel_size):
+        return nn.Sequential(nn.Conv2d(in_channel, in_channel, kernel_size),
+                             nn.BatchNorm2d(in_channel),
+                             nn.Sigmoid(),
+                             nn.Conv2d(in_channel, out_channel, kernel_size),
+                             nn.BatchNorm2d(out_channel),
+                             nn.Sigmoid())
+
     def forward(self, x1, x2):
+        # First image
         x1 = self.conv(x1)
         x1 = self.db1(x1)
         x1 = self.db2(x1)
         x1 = self.db3(x1)
+        x1 = self.conv2(x1)
+        x1 = self.fc1(x1.view(x1.shape[0], -1))
+
+        # Second image
         x2 = self.conv(x2)
         x2 = self.db1(x2)
         x2 = self.db2(x2)
         x2 = self.db3(x2)
-        x1 = self.fc1(x1.view(x1.shape[0], -1))
+        x2 = self.conv2(x2)
         x2 = self.fc1(x2.view(x2.shape[0], -1))
+
         return self.fc2(torch.abs(x1 - x2))
