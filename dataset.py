@@ -27,7 +27,6 @@ class PairedImagesDataset(Dataset):
             self.transform = transform
         self.real_images = self.load_images(os.path.join(data_path, 'training_real_toy'), True)
         self.fake_images = self.load_images(os.path.join(data_path, 'training_fake_toy'), False)
-        self.pair_lst_index = 0
         self.pair_lst = self.populate_pair_lst()
         # self.real_images = self.load_images(os.path.join(data_path, 'training_real'))
         # self.fake_images = self.load_images(os.path.join(data_path, 'training_fake'))
