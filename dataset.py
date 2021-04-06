@@ -80,7 +80,7 @@ class PairedImagesDataset(Dataset):
 
         # index for real - real
         for i in range(r):
-            for j in range(f):
+            for j in range(r):
                 lst_index.append(((i, j), np.array([1.0])))
 
         random.shuffle(lst_index)
