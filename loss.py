@@ -2,10 +2,13 @@ import torch
 import torch.nn
 import torch.nn.functional as F
 
+
 # https://github.com/Atharva-Phatak/Similar-Faces/blob/master/Facial_Similarity.ipynb
 class ContrastiveLoss(torch.nn.Module):
-    '''Contrastive loss function.
-    Based on: http://yann.lecun.com/exdb/publis/pdf/hadsell-chopra-lecun-06.pdf'''
+    """
+    Contrastive loss function.
+    Based on: http://yann.lecun.com/exdb/publis/pdf/hadsell-chopra-lecun-06.pdf
+    """
 
     def __init__(self, margin=2.0):
         super(ContrastiveLoss, self).__init__()
