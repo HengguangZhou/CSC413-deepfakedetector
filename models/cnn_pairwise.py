@@ -26,6 +26,45 @@ class CnnPairwise(nn.Module):
                                   nn.Sigmoid(),
                                   )
         self.conv.apply(init_conv_weights)
+        # First dense layer
+        self.db1_1 = self.dense_conv(48, 48, 3)
+        self.db1_1.apply(init_conv_weights)
+        self.db1_2 = self.dense_conv(48, 48, 3)
+        self.db1_2.apply(init_conv_weights)
+        self.db1_3 = self.dense_conv(48, 60, 3)
+        self.db1_3.apply(init_conv_weights)
+
+        # Second dense layer
+        self.db2_1 = self.dense_conv(60, 60, 3)
+        self.db2_1.apply(init_conv_weights)
+        self.db2_2 = self.dense_conv(60, 60, 3)
+        self.db2_2.apply(init_conv_weights)
+        self.db2_3 = self.dense_conv(60, 60, 3)
+        self.db2_3.apply(init_conv_weights)
+        self.db2_4 = self.dense_conv(60, 78, 3)
+        self.db2_4.apply(init_conv_weights)
+
+        # Third dense layer
+        self.db3_1 = self.dense_conv(78, 78, 3)
+        self.db3_1.apply(init_conv_weights)
+        self.db3_2 = self.dense_conv(78, 78, 3)
+        self.db3_2.apply(init_conv_weights)
+        self.db3_3 = self.dense_conv(78, 78, 3)
+        self.db3_3.apply(init_conv_weights)
+        self.db3_4 = self.dense_conv(78, 78, 3)
+        self.db3_4.apply(init_conv_weights)
+        self.db3_5 = self.dense_conv(78, 99, 3)
+        self.db3_5.apply(init_conv_weights)
+
+        # Fourth dense layer
+        self.db4_1 = self.dense_conv(99, 99, 3)
+        self.db4_1.apply(init_conv_weights)
+        self.db4_2 = self.dense_conv(99, 99, 3)
+        self.db4_2.apply(init_conv_weights)
+        self.db4_3 = self.dense_conv(99, 99, 3)
+        self.db4_3.apply(init_conv_weights)
+        self.db4_4 = self.dense_conv(99, 171, 3)
+        self.db4_4.apply(init_conv_weights)
         # self.db1 = self.dense_block1(48, 60, 3)
         # self.db1.apply(init_conv_weights)
         #
@@ -48,59 +87,43 @@ class CnnPairwise(nn.Module):
         self.fc2 = nn.Sequential(nn.Linear(2, 1), nn.Sigmoid())
         self.fc2.apply(init_fc_weights)
 
-    def conv_for_dense_block(self, in_channel, out_channel, kernel_size):
+    def dense_conv(self, in_channel, out_channel, kernel_size):
         return nn.Sequential(nn.Conv2d(in_channel, out_channel, kernel_size, padding=1),
                              nn.BatchNorm2d(out_channel),
                              nn.Sigmoid())
 
-    # 3 layer dense block
+    # first dense layer forward
     def forward_dense1(self, x):
-        conv = self.conv_for_dense_block(48, 48, 3).to("cuda")
-        first_out_x = conv(x)
-        # conv = self.conv_for_dense_block(48, 48, 3).to("cuda")
-        # second_out_x = conv(torch.cat((x, first_out_x)))
-        conv = self.conv_for_dense_block(48, 60, 3).to("cuda")
-        second_out_x = conv(torch.cat((x, first_out_x)))
+        first_out_x = self.db1_1(x)
+        second_out_x = self.db1_2(torch.cat((x, first_out_x)))
+        out = self.db1_3(torch.cat((x, first_out_x, second_out_x)))
 
-        return second_out_x
+        return out
 
     def forward_dense2(self, x):
-        conv = self.conv_for_dense_block(60, 60, 3).to("cuda")
-        first_out_x = conv(x)
-        # conv = self.conv_for_dense_block(60, 60, 3).to("cuda")
-        # second_out_x = conv(torch.cat((x, first_out_x)))
-        # conv = self.conv_for_dense_block(60, 60, 3).to("cuda")
-        # third_out_x = conv(torch.cat((x, first_out_x, second_out_x)))
-        conv = self.conv_for_dense_block(60, 78, 3).to("cuda")
-        second_out_x = conv(torch.cat((x, first_out_x)))
+        first_out_x = self.db2_1(x)
+        second_out_x = self.db2_2(torch.cat((x, first_out_x)))
+        third_out_x = self.db2_3(torch.cat((x, first_out_x, second_out_x)))
+        out = self.db2_4(torch.cat((x, first_out_x, second_out_x, third_out_x)))
 
-        return second_out_x
+        return out
 
     def forward_dense3(self, x):
-        conv = self.conv_for_dense_block(78, 78, 3).to("cuda")
-        first_out_x = conv(x)
-        # conv = self.conv_for_dense_block(78, 78, 3).to("cuda")
-        # second_out_x = conv(torch.cat((x, first_out_x)))
-        # conv = self.conv_for_dense_block(78, 78, 3).to("cuda")
-        # third_out_x = conv(torch.cat((x, first_out_x, second_out_x)))
-        # conv = self.conv_for_dense_block(78, 78, 3).to("cuda")
-        # fourth_out_x = conv(torch.cat((x, first_out_x, second_out_x, third_out_x)))
-        conv = self.conv_for_dense_block(78, 99, 3).to("cuda")
-        second_out_x = conv(torch.cat((x, first_out_x)))
+        first_out_x = self.db3_1(x)
+        second_out_x = self.db3_2(torch.cat((x, first_out_x)))
+        third_out_x = self.db3_3(torch.cat((x, first_out_x, second_out_x)))
+        fourth_out_x = self.db3_4(torch.cat((x, first_out_x, second_out_x, third_out_x)))
+        out = self.db3_5(torch.cat((x, first_out_x, second_out_x, third_out_x, fourth_out_x)))
 
-        return second_out_x
+        return out
 
     def forward_dense4(self, x):
-        conv = self.conv_for_dense_block(99, 99, 3).to("cuda")
-        first_out_x = conv(x)
-        # conv = self.conv_for_dense_block(99, 99, 3).to("cuda")
-        # second_out_x = conv(torch.cat((x, first_out_x)))
-        # conv = self.conv_for_dense_block(99, 99, 3).to("cuda")
-        # third_out_x = conv(torch.cat((x, first_out_x, second_out_x)))
-        conv = self.conv_for_dense_block(99, 171, 3).to("cuda")
-        second_out_x = conv(torch.cat((x, first_out_x)))
+        first_out_x = self.db4_1(x)
+        second_out_x = self.db4_2(torch.cat((x, first_out_x)))
+        third_out_x = self.db4_3(torch.cat((x, first_out_x, second_out_x)))
+        out = self.db4_4(torch.cat((x, first_out_x, second_out_x, third_out_x)))
 
-        return second_out_x
+        return out
 
     def forward(self, x1, x2):
         x1 = self.conv(x1)
