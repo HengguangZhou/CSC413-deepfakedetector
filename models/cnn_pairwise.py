@@ -144,31 +144,31 @@ class CnnPairwise(nn.Module):
                               stride=4)
         self.conv.apply(init_conv_weights)
         # First dense layer
-        self.db1_1 = ResidualBlock(96, 96, 3)
+        self.db1_1 = ResidualBlock(96, 96, 3, False)
         self.db1_1.apply(init_conv_weights)
-        self.db1_2 = ResidualBlock(96, 128, 3)
+        self.db1_2 = ResidualBlock(96, 128, 3, True)
         self.db1_2.apply(init_conv_weights)
 
         # Second dense layer
-        self.db2_1 = ResidualBlock(128, 128, 3)
+        self.db2_1 = ResidualBlock(128, 128, 3, False)
         self.db2_1.apply(init_conv_weights)
-        self.db2_2 = ResidualBlock(128, 256, 3)
+        self.db2_2 = ResidualBlock(128, 256, 3, True)
         self.db2_2.apply(init_conv_weights)
 
         # Third dense layer
-        self.db3_1 = ResidualBlock(256, 256, 3)
+        self.db3_1 = ResidualBlock(256, 256, 3, False)
         self.db3_1.apply(init_conv_weights)
-        self.db3_2 = ResidualBlock(256, 256, 3)
+        self.db3_2 = ResidualBlock(256, 256, 3, True)
         self.db3_2.apply(init_conv_weights)
 
         self.conv2 = nn.Sequential(nn.BatchNorm2d(256),
                                    nn.SiLU(),
                                    nn.Conv2d(256, 2, kernel_size=3, padding=1),
-                                   nn.AvgPool2d(25))
+                                   nn.AvgPool2d(4))
         self.conv2.apply(init_conv_weights)
 
-        # 256x25x25
-        self.fc1 = nn.Sequential(nn.Linear(256*25*25, 128), nn.Softmax())  # Don't know the size for input channels...
+        # 256x4x4 after down-sampling
+        self.fc1 = nn.Sequential(nn.Linear(256*4*4, 128), nn.Softmax())  # Don't know the size for input channels...
         self.fc1.apply(init_fc_weights)
         self.fc2 = nn.Sequential(nn.Linear(2, 1), nn.Softmax())
         self.fc2.apply(init_fc_weights)
@@ -201,7 +201,7 @@ class CnnPairwise(nn.Module):
 
 
 class ResidualBlock(nn.Module):
-    def __init__(self, in_channel, out_channel, kernel_size):
+    def __init__(self, in_channel, out_channel, kernel_size, down_sample):
         super(ResidualBlock, self).__init__()
         self.conv1 = nn.Sequential(nn.BatchNorm2d(in_channel),
                                    nn.SiLU(),
@@ -209,7 +209,7 @@ class ResidualBlock(nn.Module):
         self.conv2 = nn.Sequential(nn.BatchNorm2d(in_channel),
                                    nn.SiLU(),
                                    nn.Conv2d(in_channel, out_channel, kernel_size=kernel_size, padding=1))
-        # self.down_sample = nn.AvgPool2d(kernel_size=1, stride=2)
+        self.down_sample = nn.AvgPool2d(kernel_size=1, stride=2) if down_sample else nn.Identity()
 
     def shortcut(self, x, z):
         if x.shape[1] != z.shape[1]:  # Different number of channels
@@ -222,6 +222,7 @@ class ResidualBlock(nn.Module):
             return z + x
 
     def forward(self, x):
+        x = self.down_sample(x)
         z = self.conv1(x)
         z = self.conv2(z)
         z = self.shortcut(x, z)
