@@ -170,8 +170,11 @@ class CnnPairwise(nn.Module):
         # 256x4x4 after down-sampling
         self.fc1 = nn.Sequential(nn.Linear(256*4*4, 128), nn.Softmax())  # Don't know the size for input channels...
         self.fc1.apply(init_fc_weights)
-        self.fc2 = nn.Sequential(nn.Linear(2, 1), nn.Softmax())
+        self.fc2 = nn.Sequential(nn.Linear(2, 1), nn.Sigmoid())
         self.fc2.apply(init_fc_weights)
+
+        self.dropout1 = nn.Dropout(0.5)
+        self.dropout2 = nn.Dropout(0.8)
 
     def forward(self, x1, x2):
         x1 = self.conv(x1)
@@ -182,7 +185,7 @@ class CnnPairwise(nn.Module):
         x1 = self.db3_1(x1)
         x1 = self.db3_2(x1)
         x1_r = x1.view(x1.shape[0], -1)
-        x1_r = self.fc1(x1_r)
+        x1_r = self.dropout1(self.fc1(x1_r))
 
         # Second image
         x2 = self.conv(x2)
@@ -195,9 +198,11 @@ class CnnPairwise(nn.Module):
         x2_r = x2.view(x2.shape[0], -1)
 
         x2 = self.conv2(x2)
-        x2_r = self.fc1(x2_r)
+        x2_r = self.dropout1(self.fc1(x2_r))
 
-        return x1_r, x2_r, self.fc2(x2.view(x2.shape[0], -1))
+        pred = self.dropout2(self.fc2(x2.view(x2.shape[0], -1)))
+
+        return x1_r, x2_r, pred
 
 
 class ResidualBlock(nn.Module):

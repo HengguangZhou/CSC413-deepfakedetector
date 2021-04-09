@@ -14,10 +14,11 @@ from loss import ContrastiveLoss
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model', type=str, default='siamese')
+    parser.add_argument('--model', type=str, default='cnn_pairwise')
     parser.add_argument('--train_data', type=str, required=True)
+    # parser.add_argument('--train_data', type=str, default='../data/real_and_fake_face')
     # parser.add_argument('--test_data', type=str, required=True)
-    parser.add_argument("--batch_size", type=int, default=128)
+    parser.add_argument("--batch_size", type=int, default=16)
     parser.add_argument("--lr", type=float, default=0.01)
     parser.add_argument("--weights_dir", type=str, default="checkpoints/")
     parser.add_argument("--num_epochs", type=int, default=50)
@@ -45,11 +46,17 @@ if __name__ == "__main__":
 
     model = model.to(device)
 
-    # criterion = torch.nn.BCEWithLogitsLoss()
+    criterion1 = torch.nn.BCEWithLogitsLoss()
     criterion = ContrastiveLoss()
     val = torch.nn
     optimizer = torch.optim.Adam(model.parameters(), lr=opts.lr)
+    # classifier_params = [
+    #     {'params': model.conv2.parameters()},
+    #     {'params': model.fc2.parameters()}
+    # ]
+    # optimizer2 = torch.optim.Adam(classifier_params, lr=opts.lr)
     optimizer.zero_grad()
+    # optimizer2.zero_grad()
 
     transform = Compose([Resize(105),
                     ToTensor(),
@@ -69,7 +76,9 @@ if __name__ == "__main__":
                                     shuffle=True)
 
     for epoch in range(opts.num_epochs):
+        data_len = len(train_pairs_loader)
         model.train()
+        step = 0
         with tqdm(total=(len(train_pairs) - len(train_pairs) % opts.batch_size)) as t:
             t.set_description(f'train epoch: {epoch}/{opts.num_epochs - 1}')
             los = 0
@@ -81,7 +90,11 @@ if __name__ == "__main__":
                 # print(pred)
                 # print(label)
                 # print("------------------------")
-                loss = criterion(i1, i2, label)
+                # if (step * opts.batch_size) / data_len < 1:
+                if epoch < 5:
+                    loss = criterion(i1, i2, label)
+                else:
+                    loss = criterion1(pred,  label)
                 los += loss.item()
                 optimizer.zero_grad()
                 loss.backward()
@@ -89,8 +102,9 @@ if __name__ == "__main__":
 
                 t.set_postfix(loss='{:.6f}'.format(los / (idx + 1)))
                 t.update(img1.shape[0])
+            step += 1
 
-        torch.save(model.state_dict(), os.path.join(opts.weights_dir, f'model_{opts.model}_epoch_{epoch}.pth'))
+        torch.save(model.state_dict(), os.path.join(opts.weights_dir, f'model_{opts.model}_epoch_latest.pth'))
 
         model.eval()
 

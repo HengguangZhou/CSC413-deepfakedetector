@@ -23,14 +23,14 @@ class PairedImagesDataset(Dataset):
         transforms.ToTensor(), ])
         else:
             self.transform = transform
-        self.real_images = self.load_images(os.path.join(data_path, 'training_real_toy'), True)
-        self.fake_images = self.load_images(os.path.join(data_path, 'training_fake_toy'), False)
+        self.real_images = self.load_images(os.path.join(data_path, 'training_real'), True)
+        self.fake_images = self.load_images(os.path.join(data_path, 'training_fake'), False)
         # self.real_images = self.load_images(os.path.join(data_path, 'training_real'))
         # self.fake_images = self.load_images(os.path.join(data_path, 'training_fake'))
       
     def __len__(self):
         # return len(self.all_image_pairs)
-        return 10000
+        return 500000
 
     def __getitem__(self, idx):
         img1, img2, np_label = self.get_image_pair(idx)
