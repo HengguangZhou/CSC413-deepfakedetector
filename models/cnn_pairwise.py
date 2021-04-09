@@ -163,12 +163,12 @@ class CnnPairwise(nn.Module):
 
         self.conv2 = nn.Sequential(nn.BatchNorm2d(256),
                                    nn.SiLU(),
-                                   nn.Conv2d(171, 2, kernel_size=3, padding=1),
-                                   nn.AvgPool2d(29))
+                                   nn.Conv2d(256, 2, kernel_size=3, padding=1),
+                                   nn.AvgPool2d(25))
         self.conv2.apply(init_conv_weights)
 
-        # 171x9x9
-        self.fc1 = nn.Sequential(nn.Linear(171*25*25, 128), nn.Softmax())  # Don't know the size for input channels...
+        # 256x25x25
+        self.fc1 = nn.Sequential(nn.Linear(256*25*25, 128), nn.Softmax())  # Don't know the size for input channels...
         self.fc1.apply(init_fc_weights)
         self.fc2 = nn.Sequential(nn.Linear(2, 1), nn.Softmax())
         self.fc2.apply(init_fc_weights)
@@ -176,7 +176,6 @@ class CnnPairwise(nn.Module):
     def forward(self, x1, x2):
         x1 = self.conv(x1)
         x1 = self.db1_1(x1)
-        print(x1.shape)
         x1 = self.db1_2(x1)
         x1 = self.db2_1(x1)
         x1 = self.db2_2(x1)
@@ -204,12 +203,12 @@ class CnnPairwise(nn.Module):
 class ResidualBlock(nn.Module):
     def __init__(self, in_channel, out_channel, kernel_size):
         super(ResidualBlock, self).__init__()
-        self.conv1 = nn.Sequential(nn.Conv2d(in_channel, in_channel, kernel_size=kernel_size, padding=1),
-                                   nn.BatchNorm2d(in_channel),
-                                   nn.ReLU())
-        self.conv2 = nn.Sequential(nn.Conv2d(in_channel, out_channel, kernel_size=kernel_size, padding=1),
-                                   nn.BatchNorm2d(out_channel),
-                                   nn.ReLU())
+        self.conv1 = nn.Sequential(nn.BatchNorm2d(in_channel),
+                                   nn.SiLU(),
+                                   nn.Conv2d(in_channel, in_channel, kernel_size=kernel_size, padding=1))
+        self.conv2 = nn.Sequential(nn.BatchNorm2d(in_channel),
+                                   nn.SiLU(),
+                                   nn.Conv2d(in_channel, out_channel, kernel_size=kernel_size, padding=1))
         # self.down_sample = nn.AvgPool2d(kernel_size=1, stride=2)
 
     def shortcut(self, x, z):
@@ -225,8 +224,6 @@ class ResidualBlock(nn.Module):
     def forward(self, x):
         z = self.conv1(x)
         z = self.conv2(z)
-        print(x.shape)
-        print(z.shape)
         z = self.shortcut(x, z)
 
         return z
