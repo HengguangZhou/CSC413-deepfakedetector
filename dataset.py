@@ -9,28 +9,27 @@ import random
 from torchvision.transforms import Compose, RandomCrop, ToTensor, ToPILImage, CenterCrop, Resize
 import matplotlib.pyplot as plt
 
+
 class PairedImagesDataset(Dataset):
     """
     The custom dataset contains real and fake images that will be paired together
     """
-    def __init__(self, data_path, transform=None):
+    def __init__(self, data_path, size=50000, transform=None):
         """
         :param data_path: Root directory of the image data
         """
         self.data_path = data_path
+        self.size = size
         if transform is None:
             self.transform = transforms.Compose([
         transforms.ToTensor(), ])
         else:
             self.transform = transform
-        self.real_images = self.load_images(os.path.join(data_path, 'training_real'), True)
-        self.fake_images = self.load_images(os.path.join(data_path, 'training_fake'), False)
-        # self.real_images = self.load_images(os.path.join(data_path, 'training_real'))
-        # self.fake_images = self.load_images(os.path.join(data_path, 'training_fake'))
+        self.real_images = self.load_images(os.path.join(data_path, 'real'), True)
+        self.fake_images = self.load_images(os.path.join(data_path, 'fake'), False)
       
     def __len__(self):
-        # return len(self.all_image_pairs)
-        return 500000
+        return self.size
 
     def __getitem__(self, idx):
         img1, img2, np_label = self.get_image_pair(idx)
@@ -47,23 +46,23 @@ class PairedImagesDataset(Dataset):
             label = 1.0
 
         for filename in glob.glob(os.path.join(path, '*.jpg')):
-            im = Image.open(filename)
-            images.append((im, np.array([label])))
+            # print(filename)
+            # im = Image.open(filename)
+            images.append((filename, np.array([label])))
             # print(np.array(im).shape)
 
         return images
 
     def get_image_pair(self, index):
-        random.shuffle(self.real_images)
-        random.shuffle(self.fake_images)
         pooled_images = self.real_images+self.fake_images
-        random.shuffle(pooled_images)
 
-        img1 = random.choice(self.real_images)
-        img2 = random.choice(pooled_images)
-        label = img2[1]
+        img1_info = random.choice(self.real_images)
+        img2_info = random.choice(pooled_images)
+        label = img2_info[1]
+        img1 = Image.open(img1_info[0])
+        img2 = Image.open(img2_info[0])
 
-        return img1[0], img2[0], label
+        return img1, img2, label
 
 
 if __name__ == '__main__':
