@@ -22,7 +22,7 @@ class PairedImagesDataset(Dataset):
         self.size = size
         if transform is None:
             self.transform = transforms.Compose([
-        transforms.ToTensor(), ])
+                transforms.ToTensor(), ])
         else:
             self.transform = transform
         self.real_images = self.load_images(os.path.join(data_path, 'real'), True)
@@ -32,7 +32,7 @@ class PairedImagesDataset(Dataset):
         return self.size
 
     def __getitem__(self, idx):
-        img1, img2, np_label = self.get_image_pair(idx)
+        img1, img2, np_label = self.get_image_pair()
         real_image = self.transform(img1)
         fake_image = self.transform(img2)
         label = torch.from_numpy(np_label)
@@ -46,14 +46,11 @@ class PairedImagesDataset(Dataset):
             label = 1.0
 
         for filename in glob.glob(os.path.join(path, '*.jpg')):
-            # print(filename)
-            # im = Image.open(filename)
             images.append((filename, np.array([label])))
-            # print(np.array(im).shape)
 
         return images
 
-    def get_image_pair(self, index):
+    def get_image_pair(self):
         pooled_images = self.real_images+self.fake_images
 
         img1_info = random.choice(self.real_images)
@@ -68,7 +65,7 @@ class PairedImagesDataset(Dataset):
 if __name__ == '__main__':
     transform = transforms.Compose([Resize(105),
         transforms.ToTensor(),
-    ]) # Convert the numpy array to a tensor
+    ])  # Convert the numpy array to a tensor
     # transform = None
     r = PairedImagesDataset('../data/real_and_fake_face/', transform)
     print(len(r))

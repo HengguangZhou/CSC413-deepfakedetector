@@ -9,6 +9,7 @@ def init_conv_weights(m):
         torch.nn.init.normal_(m.weight, std=0.1)
         torch.nn.init.normal_(m.bias, mean=0.5, std=0.1)
 
+
 def init_fc_weights(m):
     if type(m) == nn.Linear:
         torch.nn.init.normal_(m.weight, std=2)
@@ -42,7 +43,7 @@ class CnnPairwise(nn.Module):
         self.db3_2.apply(init_conv_weights)
 
         # 256x4x4 after down-sampling (fifth-layer)
-        self.fc1 = nn.Sequential(nn.Linear(256 * 4 * 4, 128), nn.Softmax())
+        self.fc1 = nn.Sequential(nn.Linear(256*4*4, 128), nn.Softmax())
         self.fc1.apply(init_fc_weights)
 
         # Classifier
@@ -53,9 +54,6 @@ class CnnPairwise(nn.Module):
         self.conv2.apply(init_conv_weights)
         self.fc2 = nn.Sequential(nn.Linear(2, 1), nn.Sigmoid())
         self.fc2.apply(init_fc_weights)
-
-        # self.dropout1 = nn.Dropout(0.5)
-        # self.dropout2 = nn.Dropout(0.2)
 
     def forward(self, x1, x2):
         x1 = self.conv(x1)
