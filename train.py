@@ -31,7 +31,7 @@ if __name__ == "__main__":
     writer = SummaryWriter()
 
     weights_path = os.path.join(opts.weights_dir,
-                                f"{opts.model}")
+                                opts.model)
     if not os.path.exists(weights_path):
         os.mkdir(weights_path)
 
@@ -106,16 +106,18 @@ if __name__ == "__main__":
                 t.set_postfix(loss='{:.6f}'.format(los / (idx + 1)), ConLoss='{:.6f}'.format(conLos / (idx + 1)),
                               train_accuracy='{:.2f}%'.format(batch_corr / img1.shape[0] * 100))
 
+            print("\nConLoss: {:.2f}".format(conLos / len(train_pairs) * opts.batch_size))
+            print("\nloss: {:.2f}".format(los / len(train_pairs) * opts.batch_size))
             print("\ntrain accuracy: {:.2f}%".format(train_corr / len(train_pairs) * 100))
-            writer.add_scalar(f'ConLoss/train/_{opts.model}_lr_{opts.lr}_bs_{opts.batch_size}_margin_{opts.margin}',
-                              conLos / len(train_pairs), epoch)
-            writer.add_scalar(f'CELoss/train/_{opts.model}_lr_{opts.lr}_bs_{opts.batch_size}_margin_{opts.margin}',
-                              los / len(train_pairs), epoch)
-            writer.add_scalar(f'Accuracy/train/_{opts.model}_lr_{opts.lr}_bs_{opts.batch_size}_margin_{opts.margin}',
+            writer.add_scalar(f'ConLoss/train',
+                              conLos / len(train_pairs) * opts.batch_size, epoch)
+            writer.add_scalar(f'CELoss/train',
+                              los / len(train_pairs) * opts.batch_size, epoch)
+            writer.add_scalar(f'Accuracy/train',
                               train_corr / len(train_pairs), epoch)
 
-        torch.save(model.state_dict(), os.path.join(opts.weights_dir,
-                                    f"{opts.model}_latest"))
+        torch.save(model.state_dict(), os.path.join(weights_path,
+                                    f"{opts.model}_latest.pth"))
 
         model.eval()
 
@@ -132,5 +134,5 @@ if __name__ == "__main__":
                 t.update(img1.shape[0])
                 val_corr += batch_corr
             print("\nval accuracy: {:.2f}%".format(val_corr / len(val_pairs) * 100))
-            writer.add_scalar(f'Accuracy/test_{opts.model}_lr_{opts.lr}_bs_{opts.batch_size}_margin_{opts.margin}',
+            writer.add_scalar(f'Accuracy/test',
                               val_corr / len(val_pairs), epoch)
