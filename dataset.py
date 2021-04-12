@@ -91,5 +91,5 @@ if __name__ == '__main__':
         # print(real.shape)
         # print(fake.shape)
         # print(label)
-        plt.imshow(fake[0].permute(1, 2, 0))
-        plt.show()
+        # plt.imshow(fake[0].permute(1, 2, 0))
+        # plt.show()
