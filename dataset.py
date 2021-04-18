@@ -62,7 +62,7 @@ class PairedImagesDataset(Dataset):
         img1 = Image.open(img1_info[0])
         img2 = Image.open(img2_info[0])
 
-        return img1, img2, label
+        return img1, img2, np.array([label])
 
 
 if __name__ == '__main__':
