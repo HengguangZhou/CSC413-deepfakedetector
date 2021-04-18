@@ -53,7 +53,7 @@ class PairedImagesDataset(Dataset):
     def get_image_pair(self):
         pooled_images = self.real_images+self.fake_images
 
-        img1_info = random.choice(self.real_images)
+        img1_info = random.choice(pooled_images)
         img2_info = random.choice(pooled_images)
         if img1_info[1] == img2_info[1]:
             label = 1.0
