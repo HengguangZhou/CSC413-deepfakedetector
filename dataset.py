@@ -9,31 +9,30 @@ import random
 from torchvision.transforms import Compose, RandomCrop, ToTensor, ToPILImage, CenterCrop, Resize
 import matplotlib.pyplot as plt
 
+
 class PairedImagesDataset(Dataset):
     """
     The custom dataset contains real and fake images that will be paired together
     """
-    def __init__(self, data_path, transform=None):
+    def __init__(self, data_path, size=50000, transform=None):
         """
         :param data_path: Root directory of the image data
         """
         self.data_path = data_path
+        self.size = size
         if transform is None:
             self.transform = transforms.Compose([
-        transforms.ToTensor(), ])
+                transforms.ToTensor(), ])
         else:
             self.transform = transform
-        self.real_images = self.load_images(os.path.join(data_path, 'training_real_toy'), True)
-        self.fake_images = self.load_images(os.path.join(data_path, 'training_fake_toy'), False)
-        # self.real_images = self.load_images(os.path.join(data_path, 'training_real'))
-        # self.fake_images = self.load_images(os.path.join(data_path, 'training_fake'))
+        self.real_images = self.load_images(os.path.join(data_path, 'real'), True)
+        self.fake_images = self.load_images(os.path.join(data_path, 'fake'), False)
       
     def __len__(self):
-        # return len(self.all_image_pairs)
-        return 10000
+        return self.size
 
     def __getitem__(self, idx):
-        img1, img2, np_label = self.get_image_pair(idx)
+        img1, img2, np_label = self.get_image_pair()
         real_image = self.transform(img1)
         fake_image = self.transform(img2)
         label = torch.from_numpy(np_label)
@@ -47,29 +46,26 @@ class PairedImagesDataset(Dataset):
             label = 1.0
 
         for filename in glob.glob(os.path.join(path, '*.jpg')):
-            im = Image.open(filename)
-            images.append((im, np.array([label])))
-            # print(np.array(im).shape)
+            images.append((filename, np.array([label])))
 
         return images
 
-    def get_image_pair(self, index):
-        random.shuffle(self.real_images)
-        random.shuffle(self.fake_images)
+    def get_image_pair(self):
         pooled_images = self.real_images+self.fake_images
-        random.shuffle(pooled_images)
 
-        img1 = random.choice(self.real_images)
-        img2 = random.choice(pooled_images)
-        label = img2[1]
+        img1_info = random.choice(self.real_images)
+        img2_info = random.choice(pooled_images)
+        label = img2_info[1]
+        img1 = Image.open(img1_info[0])
+        img2 = Image.open(img2_info[0])
 
-        return img1[0], img2[0], label
+        return img1, img2, label
 
 
 if __name__ == '__main__':
     transform = transforms.Compose([Resize(105),
         transforms.ToTensor(),
-    ]) # Convert the numpy array to a tensor
+    ])  # Convert the numpy array to a tensor
     # transform = None
     r = PairedImagesDataset('../data/real_and_fake_face/', transform)
     print(len(r))
@@ -95,5 +91,5 @@ if __name__ == '__main__':
         # print(real.shape)
         # print(fake.shape)
         # print(label)
-        plt.imshow(fake[0].permute(1, 2, 0))
-        plt.show()
+        # plt.imshow(fake[0].permute(1, 2, 0))
+        # plt.show()
