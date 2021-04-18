@@ -19,7 +19,7 @@ if __name__ == "__main__":
     parser.add_argument('--model', type=str, default='CRFN')
     parser.add_argument('--train_data', type=str, required=True)
     parser.add_argument('--val_data', type=str, required=True)
-    parser.add_argument("--batch_size", type=int, default=16)
+    parser.add_argument("--batch_size", type=int, default=32)
     parser.add_argument("--lr", type=float, default=0.0001)
     parser.add_argument("--weights_dir", type=str, default=".\\weights\\")
     parser.add_argument("--num_epochs", type=int, default=100)
