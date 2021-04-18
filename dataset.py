@@ -55,7 +55,7 @@ class PairedImagesDataset(Dataset):
 
         img1_info = random.choice(self.real_images)
         img2_info = random.choice(pooled_images)
-        label = img2_info[1]
+        label = img1_info[1] == img2_info[1]
         img1 = Image.open(img1_info[0])
         img2 = Image.open(img2_info[0])
 
@@ -67,7 +67,7 @@ if __name__ == '__main__':
         transforms.ToTensor(),
     ])  # Convert the numpy array to a tensor
     # transform = None
-    r = PairedImagesDataset('../data/real_and_fake_face/', transform)
+    r = PairedImagesDataset('../data/real_and_fake_face/', transform=transform)
     print(len(r))
     train_pairs_loader = DataLoader(dataset=r,
                                     batch_size=1,
