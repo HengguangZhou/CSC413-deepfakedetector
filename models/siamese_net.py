@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-import torch.functional as F
 
 
 # adapted from https://stackoverflow.com/questions/49433936/how-to-initialize-weights-in-pytorch

@@ -16,6 +16,7 @@ def init_fc_weights(m):
         torch.nn.init.normal_(m.bias, mean=0.5, std=0.1)
 
 
+# This is the model implemented in this paper https://arxiv.org/abs/1809.08754
 class CnnPairwise(nn.Module):
     def __init__(self, input_channel):
         super(CnnPairwise, self).__init__()

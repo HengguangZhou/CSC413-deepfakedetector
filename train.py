@@ -1,16 +1,13 @@
 import argparse
 import os
 import torch
-import numpy as np
 from models.siamese_net import siamese
 from models.cnn_pairwise import CnnPairwise
 from models.CRFN import CRFN
 from tqdm import tqdm
 from dataset import PairedImagesDataset
-from torch.utils.data import random_split
 from torch.utils.data.dataloader import DataLoader
-from torch import nn
-from torchvision.transforms import Compose, RandomCrop, ToTensor, ToPILImage, CenterCrop, Resize
+from torchvision.transforms import Compose, ToTensor, Resize
 from loss import ContrastiveLoss
 from torch.utils.tensorboard import SummaryWriter
 
@@ -25,6 +22,7 @@ if __name__ == "__main__":
     parser.add_argument("--num_epochs", type=int, default=100)
     parser.add_argument('--input_channels', type=int, default=3)
     parser.add_argument('--margin', type=float, default=2.5)
+    parser.add_argument('--enable_fake_pairs', type=bool, dafault=False)
 
     opts = parser.parse_args()
 
@@ -56,10 +54,12 @@ if __name__ == "__main__":
     optimizer.zero_grad()
 
     transform = Compose([Resize(105),
-                    ToTensor(),
-                    ])
-    train_pairs = PairedImagesDataset(data_path=opts.train_data, size=40000, transform=transform)
-    val_pairs = PairedImagesDataset(data_path=opts.val_data, size=10000, transform=transform)
+                         ToTensor()])
+
+    train_pairs = PairedImagesDataset(data_path=opts.train_data, size=40000,
+                                      transform=transform, enable_fake_pairs=opts.enable_fake_pairs)
+    val_pairs = PairedImagesDataset(data_path=opts.val_data, size=10000,
+                                    transform=transform, enable_fake_pairs=opts.enable_fake_pairs)
     train_pairs_loader = DataLoader(dataset=train_pairs,
                                     batch_size=opts.batch_size,
                                     shuffle=True)
@@ -76,16 +76,17 @@ if __name__ == "__main__":
             los = 0
             conLos = 0
             for idx, data in enumerate(train_pairs_loader):
-                img1, img2, label = data
-                img1, img2, label = img1.to(device), img2.to(device), label.to(device)
+                img1, img2, label1, label2, same_label = data
+                img1, img2, label1, label2, same_label = img1.to(device), img2.to(device), label1.to(device), \
+                                                    label2.to(device), same_label.to(device)
                 i1, i2, pred = model(img1, img2)
 
                 if opts.model == 'siamese':
-                    loss = CE(pred, label)
+                    loss = CE(pred, label2)
                     los += loss.item()
-                else:
-                    con = contrastive(i1, i2, label)
-                    cro = CE(pred,  label)
+                else:  # If the model is cnn-pairwise or CRFN
+                    con = contrastive(i1, i2, same_label)
+                    cro = CE(pred, label2)
                     if epoch < 10:
                         loss = con
                     else:
@@ -97,8 +98,7 @@ if __name__ == "__main__":
                 loss.backward()
                 optimizer.step()
 
-                batch_corr = int(torch.sum(torch.round(torch.sigmoid(pred)) == label))
-                batch_loss = label
+                batch_corr = int(torch.sum(torch.round(torch.sigmoid(pred)) == label2))
 
                 t.update(img1.shape[0])
                 train_corr += batch_corr
@@ -125,10 +125,11 @@ if __name__ == "__main__":
             t.set_description(f'val epoch: {epoch}/{opts.num_epochs - 1}')
             val_corr = 0
             for idx, data in enumerate(val_pairs_loader):
-                img1, img2, label = data
-                img1, img2, label = img1.to(device), img2.to(device), label.to(device)
+                img1, img2, label1, label2, same_label = data
+                img1, img2, label1, label2, same_label = img1.to(device), img2.to(device), \
+                                                         label1.to(device), label2.to(device), same_label.to(device)
                 i1, i2, pred = model(img1, img2)
-                batch_corr = int(torch.sum(torch.round(torch.sigmoid(pred)) == label))
+                batch_corr = int(torch.sum(torch.round(torch.sigmoid(pred)) == label2))
 
                 t.set_postfix(accuracy='{:.2f}%'.format(batch_corr / img1.shape[0] * 100))
                 t.update(img1.shape[0])
