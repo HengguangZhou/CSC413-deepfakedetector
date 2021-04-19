@@ -49,7 +49,6 @@ if __name__ == "__main__":
 
     contrastive = ContrastiveLoss(margin=opts.margin)
     CE = torch.nn.BCEWithLogitsLoss()
-    val = torch.nn
     optimizer = torch.optim.Adam(model.parameters(), lr=opts.lr)
     optimizer.zero_grad()
 
