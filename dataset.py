@@ -14,7 +14,7 @@ class PairedImagesDataset(Dataset):
     """
     The custom dataset contains real and fake images that will be paired together
     """
-    def __init__(self, data_path, size=50000, transform=None):
+    def __init__(self, data_path, size=50000, transform=None, enable_fake_pairs=False):
         """
         :param data_path: Root directory of the image data
         """
@@ -27,6 +27,7 @@ class PairedImagesDataset(Dataset):
             self.transform = transform
         self.real_images = self.load_images(os.path.join(data_path, 'real'), True)
         self.fake_images = self.load_images(os.path.join(data_path, 'fake'), False)
+        self.enable_fake_pairs = enable_fake_pairs
       
     def __len__(self):
         return self.size
@@ -51,18 +52,16 @@ class PairedImagesDataset(Dataset):
         return images
 
     def get_image_pair(self):
-        pooled_images = self.real_images+self.fake_images
-
-        img1_info = random.choice(pooled_images)
+        pooled_images = self.real_images + self.fake_images
+        img1_info = random.choice(self.real_images)
+        if self.enable_fake_pairs:
+            img1_info = random.choice(pooled_images)
         img2_info = random.choice(pooled_images)
-        if img1_info[1] == img2_info[1]:
-            label = 1.0
-        else:
-            label = 0.0
         img1 = Image.open(img1_info[0])
         img2 = Image.open(img2_info[0])
+        label = img2_info[1]
 
-        return img1, img2, np.array([label])
+        return img1, img2, label
 
 
 if __name__ == '__main__':
