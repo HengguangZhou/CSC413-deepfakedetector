@@ -21,7 +21,7 @@ if __name__ == "__main__":
     parser.add_argument("--weights_dir", type=str, default=".\\weights\\")
     parser.add_argument("--num_epochs", type=int, default=100)
     parser.add_argument('--input_channels', type=int, default=3)
-    parser.add_argument('--margin', type=float, default=2.5)
+    parser.add_argument('--margin', type=float, default=1.5)
     parser.add_argument('--enable_fake_pairs', type=bool, default=False)
 
     opts = parser.parse_args()
