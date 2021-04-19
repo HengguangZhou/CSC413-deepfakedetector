@@ -78,12 +78,13 @@ if __name__ == "__main__":
                 img1, img2, label1, label2, same_label = data
                 img1, img2, label1, label2, same_label = img1.to(device), img2.to(device), label1.to(device), \
                                                     label2.to(device), same_label.to(device)
-                i1, i2, pred = model(img1, img2)
 
                 if opts.model == 'siamese':
+                    pred = model(img1, img2)
                     loss = CE(pred, label2)
                     los += loss.item()
                 else:  # If the model is cnn-pairwise or CRFN
+                    i1, i2, pred = model(img1, img2)
                     con = contrastive(i1, i2, same_label)
                     cro = CE(pred, label2)
                     if epoch < 10:
