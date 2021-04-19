@@ -14,7 +14,8 @@ def init_fc_weights(m):
         torch.nn.init.normal_(m.weight, std=2)
         torch.nn.init.normal_(m.bias, mean=0.5, std=0.1)
 
-
+# This is the model implemented in this paper https://arxiv.org/abs/1809.08754
+# This is the implementation https://github.com/jesse1029/Fake-Face-Images-Detection-Tensorflow
 class CRFN(nn.Module):
     def __init__(self, input_channel):
         super(CRFN, self).__init__()
