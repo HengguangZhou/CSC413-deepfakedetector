@@ -28,8 +28,8 @@ class PairedImagesDataset(Dataset):
         else:
             self.transform = transform
         self.enable_fake_pairs = enable_fake_pairs
-        self.real_images = self.load_images(os.path.join(data_path, 'training_real'), True)
-        self.fake_images = self.load_images(os.path.join(data_path, 'training_fake'), False)
+        self.real_images = self.load_images(os.path.join(data_path, 'real'), True)
+        self.fake_images = self.load_images(os.path.join(data_path, 'fake'), False)
       
     def __len__(self):
         return self.size
