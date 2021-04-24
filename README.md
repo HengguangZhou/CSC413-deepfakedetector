@@ -18,9 +18,3 @@ After training, you can evaluate the performance on single image pair by the fol
 ```
 python test.py --real_image /path/to/reference_image/ --unknown_image /path/to/test_image/
 ```
-
-### Lattice plot
-After finish training, you can view the lattice plot with the following script:
-```
-python lattice.py
-```
